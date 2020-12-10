@@ -1,4 +1,4 @@
-#Requires -Module @{ ModuleName = 'Invoke-Build'; ModuleVersion = '5.6.1' }
+#Requires -Module @{ ModuleName = 'InvokeBuild'; ModuleVersion = '5.6.1' }
 #Requires -Version 7.0.0
 
 [CmdletBinding(PositionalBinding)]
@@ -11,13 +11,25 @@ param (
     # If set, lint failures will stop the build. Always true in CI.
     [Parameter()]
     [switch]
-    $FailOnLint
+    $FailOnLint,
+
+    # Flag of platforms to target
+    [Parameter()]
+    [ValidateSet('Windows64','Linux64')]
+    [string[]]
+    $Platform = @('Windows64','Linux64')
 )
 
 # If we're in a CI environment, we force these settings
 if ($env:CI) {
     # Always fail on bad linting in CI
     $FailOnLint = $true
+}
+
+$targets = @()
+switch ($Platform) {
+    'Windows64' { $targets += 'x86_64-pc-windows-msvc' }
+    'Linux64'   { $targets += 'x86_64-unknown-linux-gnu' }
 }
 
 task Clean -If $Clean {
@@ -27,12 +39,12 @@ task Clean -If $Clean {
 task Lint {
     if ($FailOnLint) {
         exec {
-            cargo clippy -- --deny warnings
+            cargo clippy -- --deny warnings --color auto
             cargo fmt -- --check
         }
     } else {
         exec {
-            cargo clippy
+            cargo clippy --color auto
             cargo fmt
         }
     }
@@ -41,14 +53,16 @@ task Lint {
 task Test {
     if ($env:CI) {
         # Since we're in CI we should run all tests for a complete picture of any failures
-        exec { cargo test --no-fail-fast --color auto }
+        exec { cargo test --workspace --no-fail-fast --color auto }
     } else {
-        exec { cargo test --color auto }
+        exec { cargo test --workspace --color auto }
     }
 }
 
 task Build {
-    exec { cargo build --release --color auto }
+    foreach ($target in $targets) {
+        exec { cargo build --release --target $target --color auto }
+    }
 }
 
 # task UploadArtifacts {
