@@ -1,0 +1,30 @@
+name: CI Run Windows
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  pull:
+    name: Git Pull
+    runs-on: windows-2019
+    uses: actions/checkout@v2
+  build:
+    name: Build && Test
+    runs-on: windows-2019
+    steps:
+      - name: Invoke-Build
+        run: |
+          rustc --version
+          rustup --version
+          rustfmt --version
+          cargo --version
+          cargo clippy --version
+          cargo audit --version
+          pwsh --version
+          Install-Module -Name invokebuild -Force -RequiredVersion 5.6.1
+          Invoke-Build -Platform Windows64
