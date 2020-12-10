@@ -1,4 +1,4 @@
-name: CI Run
+name: CI Run Linux
 
 on:
   push:
@@ -9,12 +9,15 @@ on:
       - master
 
 jobs:
+  pull:
+    name: Git Pull
+    runs-on: ubuntu-20.04
+    uses: actions/checkout@v2
   build:
     name: Build && Test
     runs-on: ubuntu-20.04
     steps:
       - name: Invoke-Build
-        uses: actions/checkout@v2
         run: |
           rustc --version
           rustup --version
@@ -24,4 +27,4 @@ jobs:
           cargo audit --version
           pwsh --version
           Install-Module -Name invokebuild -Force -RequiredVersion 5.6.1
-          Invoke-Build
+          Invoke-Build -Platform Linux64
