@@ -2,21 +2,19 @@ name: CI Run Linux
 
 on:
   push:
-    branches:
-      - master
+    branches: [ $default-branch ]
   pull_request:
-    branches:
-      - master
+    branches: [ $default-branch ]
+
+env:
+  CARGO_TERM_COLOR: always
 
 jobs:
-  pull:
-    name: Git Pull
-    runs-on: ubuntu-20.04
-    uses: actions/checkout@v2
   build:
     name: Build && Test
     runs-on: ubuntu-20.04
     steps:
+      - uses: actions/checkout@v2
       - name: Invoke-Build
         run: |
           rustc --version
